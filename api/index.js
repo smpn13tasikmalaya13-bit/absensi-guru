@@ -1,19 +1,18 @@
 const express = require("express");
 const app = express();
 
-// Middleware untuk JSON
+// Middleware
 app.use(express.json());
 
-// Contoh route utama
+// Routes
 app.get("/", (req, res) => {
-  res.send("🚀 API Absensi Guru berjalan dengan baik!");
+  res.send("🚀 API Absensi Guru berjalan di Vercel!");
 });
 
-// Bisa tambah route lain
+// Untuk testing
 app.get("/ping", (req, res) => {
   res.json({ message: "pong" });
 });
 
-// Export app untuk serverless function
+// Jangan pakai app.listen(), tapi export handler:
 module.exports = app;
-
