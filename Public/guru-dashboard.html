@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard Guru - Sistem Absensi Guru</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+  <style>
+    body {
+      background-color: #f0f9ff;
+    }
+    .btn-primary {
+      background-color: #3b82f6;
+    }
+    .btn-primary:hover {
+      background-color: #2563eb;
+    }
+    .card {
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    }
+    .scanner-container {
+      position: relative;
+      width: 100%;
+      max-width: 400px;
+      margin: 0 auto;
+    }
+    #reader {
+      width: 100%;
+      border-radius: 10px;
+    }
+    .scan-button {
+      width: 200px;
+      height: 200px;
+      border-radius: 50%;
+      background-color: #3b82f6;
+      color: white;
+      font-size: 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      transition: all 0.3s;
+    }
+    .scan-button:hover {
+      background-color: #2563eb;
+      transform: scale(1.05);
+    }
+    .scan-button:active {
+      transform: scale(0.95);
+    }
+    .attendance-item {
+      border-left: 4px solid #3b82f6;
+    }
+    .sidebar-item {
+      transition: all 0.3s;
+    }
+    .sidebar-item.active {
+      background-color: #dbeafe;
+      border-left: 4px solid #3b82f6;
+    }
+  </style>
+</head>
+<body>
+  <div class="min-h-screen flex flex-col">
+    <!-- Header -->
+    <header class="bg-white shadow-md p-4">
+      <div class="flex justify-between items-center">
+        <h1 class="text-xl font-bold text-blue-600">Absensi Guru</h1>
+        <div class="flex items-center">
+          <span class="text-gray-700 mr-2" id="guru-name">Guru</span>
+          <div class="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white">
+            <i class="fas fa-user"></i>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 p-4">
+      <!-- Scan Section -->
+      <div id="scan-section" class="section">
+        <div class="text-center mb-8">
+          <h2 class="text-2xl font-bold text-gray-800 mb-2">Absensi Hari Ini</h2>
+          <p class="text-gray-600">Scan QR Code untuk melakukan absensi</p>
+        </div>
+        
+        <div class="scanner-container mb-8" id="scanner-container">
+          <div id="reader" class="hidden"></div>
+          <div id="scan-button-container">
+            <button class="scan-button" onclick="startScanner()">
+              <i class="fas fa-qrcode"></i>
+            </button>
+          </div>
+        </div>
+        
+        <div class="text-center mb-4">
+          <p class="text-sm text-gray-500">Tekan tombol di atas untuk memulai scan QR Code</p>
+        </div>
+        
+        <!-- Schedule Info -->
+        <div class="card bg-white p-4 rounded-lg mb-6">
+          <h3 class="text-lg font-semibold text-gray-800 mb-3">Jadwal Hari Ini</h3>
+          <div id="schedule-container">
+            <p class="text-gray-500 text-center">Memuat jadwal...</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- History Section -->
+      <div id="history-section" class="section hidden">
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="text-2xl font-bold text-gray-800">Riwayat Absensi</h2>
+          <button class="btn-primary text-white px-4 py-2 rounded-lg" onclick="refreshHistory()">
+            <i class="fas fa-sync-alt mr-2"></i> Refresh
+          </button>
+        </div>
+        
+        <div id="history-container">
+          <p class="text-gray-500 text-center">Memuat riwayat absensi...</p>
+        </div>
+      </div>
+
+      <!-- Settings Section -->
+      <div id="settings-section" class="section hidden">
+        <h2 class="text-2xl font-bold text-gray-800 mb-6">Pengaturan</h2>
+        
+        <div class="card bg-white p-6 rounded-lg mb-6">
+          <h3 class="text-lg font-semibold text-gray-800 mb-4">Ganti Password</h3>
+          <form id="change-password-form" onsubmit="changePassword(event)">
+            <div class="mb-4">
+              <label class="block text-sm font-medium text-gray-700 mb-1">Password Lama</label>
+              <input type="password" id="old-password" class="w-full px-3 py-2 border border-gray-300 rounded-md" required>
+            </div>
+            <div class="mb-4">
+              <label class="block text-sm font-medium text-gray-700 mb-1">Password Baru</label>
+              <input type="password" id="new-password" class="w-full px-3 py-2 border border-gray-300 rounded-md" required>
+            </div>
+            <div class="mb-4">
+              <label class="block text-sm font-medium text-gray-700 mb-1">Konfirmasi Password Baru</label>
+              <input type="password" id="confirm-password" class="w-full px-3 py-2 border border-gray-300 rounded-md" required>
+            </div>
+            <button type="submit" class="btn-primary text-white px-4 py-2 rounded-md w-full">
+              <i class="fas fa-save mr-2"></i> Simpan
+            </button>
+          </form>
+        </div>
+        
+        <div class="card bg-white p-6 rounded-lg">
+          <h3 class="text-lg font-semibold text-gray-800 mb-4">Informasi Akun</h3>
+          <div class="space-y-3">
+            <div>
+              <p class="text-sm text-gray-500">Nama</p>
+              <p class="font-medium" id="info-nama">-</p>
+            </div>
+            <div>
+              <p class="text-sm text-gray-500">NIP</p>
+              <p class="font-medium" id="info-nip">-</p>
+            </div>
+            <div>
+              <p class="text-sm text-gray-500">Email</p>
+              <p class="font-medium" id="info-email">-</p>
+            </div>
+            <div>
+              <p class="text-sm text-gray-500">No. HP</p>
+              <p class="font-medium" id="info-nohp">-</p>
+            </div>
+            <div>
+              <p class="text-sm text-gray-500">Username</p>
+              <p class="font-medium" id="info-username">-</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Bottom Navigation -->
+    <nav class="bg-white shadow-lg">
+      <div class="flex justify-around">
+        <button class="sidebar-item active flex-1 py-3 text-center" onclick="showSection('scan')">
+          <i class="fas fa-qrcode text-xl"></i>
+          <p class="text-xs mt-1">Scan</p>
+        </button>
+        <button class="sidebar-item flex-1 py-3 text-center" onclick="showSection('history')">
+          <i class="fas fa-history text-xl"></i>
+          <p class="text-xs mt-1">Riwayat</p>
+        </button>
+        <button class="sidebar-item flex-1 py-3 text-center" onclick="showSection('settings')">
+          <i class="fas fa-cog text-xl"></i>
+          <p class="text-xs mt-1">Pengaturan</p>
+        </button>
+        <button class="sidebar-item flex-1 py-3 text-center" onclick="logout()">
+          <i class="fas fa-sign-out-alt text-xl"></i>
+          <p class="text-xs mt-1">Keluar</p>
+        </button>
+      </div>
+    </nav>
+  </div>
+
+  <!-- Success Modal -->
+  <div id="success-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+    <div class="bg-white rounded-lg p-6 w-11/12 max-w-md">
+      <div class="text-center">
+        <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <i class="fas fa-check text-green-500 text-2xl"></i>
+        </div>
+        <h3 class="text-xl font-semibold text-gray-800 mb-2">Absensi Berhasil</h3>
+        <p class="text-gray-600 mb-4" id="success-message">Anda telah berhasil melakukan absensi</p>
+        <button onclick="closeModal('success-modal')" class="btn-primary text-white px-4 py-2 rounded-md">
+          OK
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Error Modal -->
+  <div id="error-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+    <div class="bg-white rounded-lg p-6 w-11/12 max-w-md">
+      <div class="text-center">
+        <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <i class="fas fa-times text-red-500 text-2xl"></i>
+        </div>
+        <h3 class="text-xl font-semibold text-gray-800 mb-2">Terjadi Kesalahan</h3>
+        <p class="text-gray-600 mb-4" id="error-message">Terjadi kesalahan saat melakukan absensi</p>
+        <button onclick="closeModal('error-modal')" class="btn-primary text-white px-4 py-2 rounded-md">
+          OK
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // API URL
+    const API_URL = 'http://localhost:3000';
+    
+    // Token
+    let token = localStorage.getItem('token');
+    let guruData = null;
+    
+    // Check if user is logged in
+    if (!token) {
+      window.location.href = 'login.html';
+    }
+    
+    // Get device ID
+    function getDeviceId() {
+      let deviceId = localStorage.getItem('deviceId');
+      if (!deviceId) {
+        deviceId = 'device_' + Math.random().toString(36).substr(2, 9);
+        localStorage.setItem('deviceId', deviceId);
+      }
+      return deviceId;
+    }
+    
+    // Set token for all API requests
+    $.ajaxSetup({
+      beforeSend: function(xhr) {
+        xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+      }
+    });
+    
+    // Load user data
+    $.get(`${API_URL}/auth/me`, function(data) {
+      guruData = data.user.guru;
+      document.getElementById('guru-name').textContent = guruData.nama;
+      
+      // Load account info
+      document.getElementById('info-nama').textContent = guruData.nama;
+      document.getElementById('info-nip').textContent = guruData.nip || '-';
+      document.getElementById('info-email').textContent = guruData.email || '-';
+      document.getElementById('info-nohp').textContent = guruData.no_hp || '-';
+      document.getElementById('info-username').textContent = data.user.username;
+      
+      // Load schedule
+      loadSchedule();
+    }).fail(function() {
+      // If token is invalid, redirect to login
+      localStorage.removeItem('token');
+      window.location.href = 'login.html';
+    });
+    
+    // Show section
+    function showSection(sectionName) {
+      // Hide all sections
+      document.querySelectorAll('.section').forEach(section => {
+        section.classList.add('hidden');
+      });
+      
+      // Show selected section
+      document.getElementById(`${sectionName}-section`).classList.remove('hidden');
+      
+      // Update active nav item
+      document.querySelectorAll('.sidebar-item').forEach(item => {
+        item.classList.remove('active');
+      });
+      event.target.closest('.sidebar-item').classList.add('active');
+      
+      // Load section data
+      if (sectionName === 'history') {
+        loadHistory();
+      }
+    }
+    
+    // Load schedule
+    function loadSchedule() {
+      const today = new Date();
+      const hari = today.toLocaleDateString('id-ID', { weekday: 'long' });
+      
+      $.get(`${API_URL}/jadwal/guru/${guruData.id}`, function(data) {
+        const scheduleContainer = document.getElementById('schedule-container');
+        
+        if (data.length === 0) {
+          scheduleContainer.innerHTML = '<p class="text-gray-500 text-center">Tidak ada jadwal hari ini</p>';
+          return;
+        }
+        
+        // Filter today's schedule
+        const todaySchedule = data.filter(item => item.hari === hari);
+        
+        if (todaySchedule.length === 0) {
+          scheduleContainer.innerHTML = '<p class="text-gray-500 text-center">Tidak ada jadwal hari ini</p>';
+          return;
+        }
+        
+        // Sort by jam_ke
+        todaySchedule.sort((a, b) => a.jam_ke - b.jam_ke);
+        
+        let scheduleHTML = '';
+        todaySchedule.forEach(item => {
+          scheduleHTML += `
+            <div class="mb-3 pb-3 border-b border-gray-200">
+              <div class="flex justify-between items-center">
+                <div>
+                  <h4 class="font-medium">${item.mata_pelajaran}</h4>
+                  <p class="text-sm text-gray-600">${item.kelas.tingkat} ${item.kelas.nama}</p>
+                </div>
+                <div class="text-right">
+                  <p class="font-medium">Jam ${item.jam_ke}</p>
+                  <p class="text-sm text-gray-600">${item.jam_mulai} - ${item.jam_selesai}</p>
+                </div>
+              </div>
+            </div>
+          `;
+        });
+        
+        scheduleContainer.innerHTML = scheduleHTML;
+      });
+    }
+    
+    // Load history
+    function loadHistory() {
+      const historyContainer = document.getElementById('history-container');
+      historyContainer.innerHTML = '<p class="text-gray-500 text-center">Memuat riwayat absensi...</p>';
+      
+      $.get(`${API_URL}/absensi/guru/${guruData.id}`, function(data) {
+        if (data.length === 0) {
+          historyContainer.innerHTML = '<p class="text-gray-500 text-center">Belum ada riwayat absensi</p>';
+          return;
+        }
+        
+        // Sort by date (newest first)
+        data.sort((a, b) => new Date(b.waktu_scan) - new Date(a.waktu_scan));
+        
+        let historyHTML = '';
+        data.forEach(item => {
+          const date = new Date(item.waktu_scan);
+          const dateStr = date.toLocaleDateString('id-ID');
+          const timeStr = date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+          
+          historyHTML += `
+            <div class="card bg-white p-4 rounded-lg mb-4 attendance-item">
+              <div class="flex justify-between items-start">
+                <div>
+                  <h4 class="font-medium">${item.kelas.tingkat} ${item.kelas.nama}</h4>
+                  <p class="text-sm text-gray-600">Jam ${item.jam_ke}</p>
+                </div>
+                <div class="text-right">
+                  <p class="font-medium">${dateStr}</p>
+                  <p class="text-sm text-gray-600">${timeStr}</p>
+                </div>
+              </div>
+            </div>
+          `;
+        });
+        
+        historyContainer.innerHTML = historyHTML;
+      });
+    }
+    
+    // Refresh history
+    function refreshHistory() {
+      loadHistory();
+    }
+    
+    // Start QR scanner
+    function startScanner() {
+      const scannerContainer = document.getElementById('scanner-container');
+      const reader = document.getElementById('reader');
+      const scanButtonContainer = document.getElementById('scan-button-container');
+      
+      // Hide scan button, show reader
+      scanButtonContainer.classList.add('hidden');
+      reader.classList.remove('hidden');
+      
+      const html5QrCode = new Html5Qrcode("reader");
+      
+      html5QrCode.start(
+        { facingMode: "environment" },
+        {
+          fps: 10,
+          qrbox: 250
+        },
+        (decodedText, decodedResult) => {
+          // Handle the scanned code
+          html5QrCode.stop().then(() => {
+            reader.classList.add('hidden');
+            scanButtonContainer.classList.remove('hidden');
+            processQRCode(decodedText);
+          }).catch((err) => {
+            console.error(`Unable to stop scanning. Error: ${err}`);
+          });
+        },
+        (errorMessage) => {
+          // Handle scan error
+        }
+      ).catch((err) => {
+        console.error(`Unable to start scanning. Error: ${err}`);
+        reader.classList.add('hidden');
+        scanButtonContainer.classList.remove('hidden');
+        showError('Tidak dapat mengakses kamera. Pastikan Anda telah memberikan izin kamera.');
+      });
+    }
+    
+    // Process QR Code
+    function processQRCode(qrToken) {
+      // Get current time
+      const now = new Date();
+      const hari = now.toLocaleDateString('id-ID', { weekday: 'long' });
+      const currentTime = now.toTimeString().slice(0, 5);
+      
+      // Find current schedule
+      $.get(`${API_URL}/jadwal/guru/${guruData.id}`, function(data) {
+        // Filter today's schedule
+        const todaySchedule = data.filter(item => item.hari === hari);
+        
+        if (todaySchedule.length === 0) {
+          showError('Tidak ada jadwal pelajaran hari ini');
+          return;
+        }
+        
+        // Find current schedule
+        let currentSchedule = null;
+        for (const schedule of todaySchedule) {
+          if (currentTime >= schedule.jam_mulai && currentTime <= schedule.jam_selesai) {
+            currentSchedule = schedule;
+            break;
+          }
+        }
+        
+        if (!currentSchedule) {
+          showError('Tidak ada jadwal pelajaran saat ini');
+          return;
+        }
+        
+        // Submit attendance
+        const attendanceData = {
+          qrToken,
+          jamKe: currentSchedule.jam_ke
+        };
+        
+        $.ajax({
+          url: `${API_URL}/absen/scan`,
+          type: 'POST',
+          data: JSON.stringify(attendanceData),
+          contentType: 'application/json',
+          success: function(response) {
+            showSuccess(`Absensi berhasil untuk ${currentSchedule.kelas.tingkat} ${currentSchedule.kelas.nama} Jam ${currentSchedule.jam_ke}`);
+            loadSchedule();
+          },
+          error: function(xhr) {
+            showError(xhr.responseJSON.message || 'Terjadi kesalahan saat melakukan absensi');
+          }
+        });
+      });
+    }
+    
+    // Show success modal
+    function showSuccess(message) {
+      document.getElementById('success-message').textContent = message;
+      document.getElementById('success-modal').classList.remove('hidden');
+    }
+    
+    // Show error modal
+    function showError(message) {
+      document.getElementById('error-message').textContent = message;
+      document.getElementById('error-modal').classList.remove('hidden');
+    }
+    
+    // Close modal
+    function closeModal(modalId) {
+      document.getElementById(modalId).classList.add('hidden');
+    }
+    
+    // Change password
+    function changePassword(event) {
+      event.preventDefault();
+      
+      const oldPassword = document.getElementById('old-password').value;
+      const newPassword = document.getElementById('new-password').value;
+      const confirmPassword = document.getElementById('confirm-password').value;
+      
+      if (newPassword !== confirmPassword) {
+        showError('Password baru dan konfirmasi password tidak cocok');
+        return;
+      }
+      
+      $.ajax({
+        url: `${API_URL}/auth/change-password`,
+        type: 'POST',
+        data: JSON.stringify({
+          oldPassword,
+          newPassword
+        }),
+        contentType: 'application/json',
+        success: function(response) {
+          showSuccess('Password berhasil diubah');
+          document.getElementById('change-password-form').reset();
+        },
+        error: function(xhr) {
+          showError(xhr.responseJSON.message || 'Terjadi kesalahan saat mengubah password');
+        }
+      });
+    }
+    
+    // Logout
+    function logout() {
+      if (confirm('Apakah Anda yakin ingin keluar?')) {
+        localStorage.removeItem('token');
+        window.location.href = 'login.html';
+      }
+    }
+  </script>
+</body>
+</html>

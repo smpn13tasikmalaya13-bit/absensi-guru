@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Sistem Absensi Guru</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <style>
+    body {
+      background-color: #f0f9ff;
+    }
+    .auth-container {
+      max-width: 400px;
+      margin: 0 auto;
+    }
+    .btn-primary {
+      background-color: #3b82f6;
+    }
+    .btn-primary:hover {
+      background-color: #2563eb;
+    }
+    .card {
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    }
+    .role-selector {
+      display: flex;
+      margin-bottom: 1.5rem;
+    }
+    .role-option {
+      flex: 1;
+      padding: 0.75rem;
+      text-align: center;
+      border: 1px solid #d1d5db;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    .role-option:first-child {
+      border-top-left-radius: 0.375rem;
+      border-bottom-left-radius: 0.375rem;
+    }
+    .role-option:last-child {
+      border-top-right-radius: 0.375rem;
+      border-bottom-right-radius: 0.375rem;
+    }
+    .role-option.active {
+      background-color: #3b82f6;
+      color: white;
+      border-color: #3b82f6;
+    }
+    .tab-container {
+      display: flex;
+      margin-bottom: 1.5rem;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .tab-option {
+      flex: 1;
+      padding: 0.75rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s;
+      border-bottom: 2px solid transparent;
+    }
+    .tab-option.active {
+      color: #3b82f6;
+      border-bottom-color: #3b82f6;
+    }
+    .form-container {
+      display: none;
+    }
+    .form-container.active {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div class="min-h-screen flex items-center justify-center p-4">
+    <div class="auth-container w-full">
+      <div class="text-center mb-8">
+        <div class="w-20 h-20 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
+          <i class="fas fa-user-graduate text-white text-3xl"></i>
+        </div>
+        <h1 class="text-3xl font-bold text-gray-800">Sistem Absensi Guru</h1>
+        <p class="text-gray-600 mt-2">Silakan login atau daftar untuk melanjutkan</p>
+      </div>
+      
+      <div class="card bg-white p-8 rounded-lg">
+        <!-- Tab Login / Sign Up -->
+        <div class="tab-container">
+          <div class="tab-option active" onclick="switchTab('login')">Login</div>
+          <div class="tab-option" onclick="switchTab('signup')">Daftar</div>
+        </div>
+        
+        <!-- Login Form -->
+        <div id="login-form-container" class="form-container active">
+          <div class="role-selector">
+            <div class="role-option active" onclick="selectRole('admin', 'login')">Admin</div>
+            <div class="role-option" onclick="selectRole('guru', 'login')">Guru</div>
+          </div>
+          
+          <form id="login-form" onsubmit="login(event)">
+            <div class="mb-4">
+              <label class="block text-sm font-medium text-gray-700 mb-1">Username</label>
+              <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <i class="fas fa-user text-gray-400"></i>
+                </div>
+                <input type="text" id="login-username" class="w-full pl-10 px-3 py-2 border border-gray-300 rounded-md" required>
+              </div>
+            </div>
+            
+            <div class="mb-6">
+              <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+              <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <i class="fas fa-lock text-gray-400"></i>
+                </div>
+                <input type="password" id="login-password" class="w-full pl-10 px-3 py-2 border border-gray-300 rounded-md" required>
+              </div>
+            </div>
+            
+            <div class="mb-4" id="login-device-field" style="display: none;">
+              <label class="block text-sm font-medium text-gray-700 mb-1">Device ID</label>
+              <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <i class="fas fa-mobile-alt text-gray-400"></i>
+                </div>
+                <input type="text" id="login-device-id" class="w-full pl-10 px-3 py-2 border border-gray-300 rounded-md" readonly>
+              </div>
+              <p class="text-xs text-gray-500 mt-1">Device ID akan digunakan untuk keamanan akun</p>
+            </div>
+            
+            <button type="submit" class="btn-primary text-white w-full py-2 rounded-md">
+              Login
+            </button>
+          </form>
+        </div>
+        
+        <!-- Sign Up Form -->
+        <div id="signup-form-container" class="form-container">
+          <div class="role-selector">
+            <div class="role-option active" onclick="selectRole('admin', 'signup')">Admin</div>
+            <div class="role-option" onclick="selectRole('guru', 'signup')">Guru</div>
+          </div>
+          
+          <form id="signup-form" onsubmit="signup(event)">
+            <div class="mb-4">
+              <label class="block text-sm font-medium text-gray-700 mb-1">Username</label>
+              <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <i class="fas fa-user text-gray-400"></i>
+                </div>
+                <input type="text" id="signup-username" class="w-full pl-10 px-3 py-2 border border-gray-300 rounded-md" required>
+              </div>
+            </div>
+            
+            <div class="mb-4">
+              <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+              <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <i class="fas fa-lock text-gray-400"></i>
+                </div>
+                <input type="password" id="signup-password" class="w-full pl-10 px-3 py-2 border border-gray-300 rounded-md" required>
+              </div>
+            </div>
+            
+            <div class="mb-4">
+              <label class="block text-sm font-medium text-gray-700 mb-1">Konfirmasi Password</label>
+              <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <i class="fas fa-lock text-gray-400"></i>
+                </div>
+                <input type="password" id="signup-confirm-password" class="w-full pl-10 px-3 py-2 border border-gray-300 rounded-md" required>
+              </div>
+            </div>
+            
+            <div id="signup-guru-fields" style="display: none;">
+              <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Nama Lengkap</label>
+                <div class="relative">
+                  <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <i class="fas fa-id-card text-gray-400"></i>
+                  </div>
+                  <input type="text" id="signup-nama" class="w-full pl-10 px-3 py-2 border border-gray-300 rounded-md">
+                </div>
+              </div>
+              
+              <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">NIP</label>
+                <div class="relative">
+                  <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <i class="fas fa-id-badge text-gray-400"></i>
+                  </div>
+                  <input type="text" id="signup-nip" class="w-full pl-10 px-3 py-2 border border-gray-300 rounded-md">
+                </div>
+              </div>
+              
+              <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                <div class="relative">
+                  <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <i class="fas fa-envelope text-gray-400"></i>
+                  </div>
+                  <input type="email" id="signup-email" class="w-full pl-10 px-3 py-2 border border-gray-300 rounded-md">
+                </div>
+              </div>
+              
+              <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">No. HP</label>
+                <div class="relative">
+                  <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <i class="fas fa-phone text-gray-400"></i>
+                  </div>
+                  <input type="text" id="signup-nohp" class="w-full pl-10 px-3 py-2 border border-gray-300 rounded-md">
+                </div>
+              </div>
+            </div>
+            
+            <button type="submit" class="btn-primary text-white w-full py-2 rounded-md">
+              Daftar
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Success Modal -->
+  <div id="success-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+    <div class="bg-white rounded-lg p-6 w-11/12 max-w-md">
+      <div class="text-center">
+        <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <i class="fas fa-check text-green-500 text-2xl"></i>
+        </div>
+        <h3 class="text-xl font-semibold text-gray-800 mb-2">Berhasil</h3>
+        <p class="text-gray-600 mb-4" id="success-message">Operasi berhasil</p>
+        <button onclick="closeModal('success-modal')" class="btn-primary text-white px-4 py-2 rounded-md">
+          OK
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Error Modal -->
+  <div id="error-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+    <div class="bg-white rounded-lg p-6 w-11/12 max-w-md">
+      <div class="text-center">
+        <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <i class="fas fa-times text-red-500 text-2xl"></i>
+        </div>
+        <h3 class="text-xl font-semibold text-gray-800 mb-2">Terjadi Kesalahan</h3>
+        <p class="text-gray-600 mb-4" id="error-message">Terjadi kesalahan</p>
+        <button onclick="closeModal('error-modal')" class="btn-primary text-white px-4 py-2 rounded-md">
+          OK
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // API URL
+    const API_URL = 'http://localhost:3000';
+    
+    // Selected roles
+    let loginRole = 'admin';
+    let signupRole = 'admin';
+    
+    // Switch tab
+    function switchTab(tabName) {
+      // Update tab UI
+      document.querySelectorAll('.tab-option').forEach(option => {
+        option.classList.remove('active');
+      });
+      event.target.classList.add('active');
+      
+      // Update form container
+      document.querySelectorAll('.form-container').forEach(container => {
+        container.classList.remove('active');
+      });
+      document.getElementById(`${tabName}-form-container`).classList.add('active');
+    }
+    
+    // Select role for login
+    function selectRole(role, formType) {
+      if (formType === 'login') {
+        loginRole = role;
+        
+        // Update UI
+        document.querySelectorAll('#login-form-container .role-option').forEach(option => {
+          option.classList.remove('active');
+        });
+        event.target.classList.add('active');
+        
+        // Show/hide device field
+        const deviceField = document.getElementById('login-device-field');
+        if (role === 'guru') {
+          deviceField.style.display = 'block';
+          generateDeviceId();
+        } else {
+          deviceField.style.display = 'none';
+        }
+      } else {
+        signupRole = role;
+        
+        // Update UI
+        document.querySelectorAll('#signup-form-container .role-option').forEach(option => {
+          option.classList.remove('active');
+        });
+        event.target.classList.add('active');
+        
+        // Show/hide guru fields
+        const guruFields = document.getElementById('signup-guru-fields');
+        if (role === 'guru') {
+          guruFields.style.display = 'block';
+          document.getElementById('signup-nama').setAttribute('required', 'required');
+        } else {
+          guruFields.style.display = 'none';
+          document.getElementById('signup-nama').removeAttribute('required');
+        }
+      }
+    }
+    
+    // Generate device ID
+    function generateDeviceId() {
+      let deviceId = localStorage.getItem('deviceId');
+      if (!deviceId) {
+        deviceId = 'device_' + Math.random().toString(36).substr(2, 9);
+        localStorage.setItem('deviceId', deviceId);
+      }
+      document.getElementById('login-device-id').value = deviceId;
+    }
+    
+    // Login
+    function login(event) {
+      event.preventDefault();
+      
+      const username = document.getElementById('login-username').value;
+      const password = document.getElementById('login-password').value;
+      const deviceId = document.getElementById('login-device-id').value;
+      
+      const loginData = {
+        username,
+        password
+      };
+      
+      if (loginRole === 'guru') {
+        loginData.deviceId = deviceId;
+      }
+      
+      $.ajax({
+        url: `${API_URL}/auth/login`,
+        type: 'POST',
+        data: JSON.stringify(loginData),
+        contentType: 'application/json',
+        success: function(response) {
+          // Save token
+          localStorage.setItem('token', response.token);
+          
+          // Redirect based on role
+          if (response.user.role === 'admin') {
+            window.location.href = 'admin-dashboard.html';
+          } else {
+            window.location.href = 'guru-dashboard.html';
+          }
+        },
+        error: function(xhr) {
+          showError(xhr.responseJSON.message || 'Login gagal. Periksa username dan password Anda.');
+        }
+      });
+    }
+    
+    // Signup
+    function signup(event) {
+      event.preventDefault();
+      
+      const username = document.getElementById('signup-username').value;
+      const password = document.getElementById('signup-password').value;
+      const confirmPassword = document.getElementById('signup-confirm-password').value;
+      
+      // Validasi password
+      if (password !== confirmPassword) {
+        showError('Password dan konfirmasi password tidak cocok');
+        return;
+      }
+      
+      const signupData = {
+        username,
+        password,
+        role: signupRole
+      };
+      
+      // Tambah data guru jika role adalah guru
+      if (signupRole === 'guru') {
+        signupData.nama = document.getElementById('signup-nama').value;
+        signupData.nip = document.getElementById('signup-nip').value;
+        signupData.email = document.getElementById('signup-email').value;
+        signupData.no_hp = document.getElementById('signup-nohp').value;
+      }
+      
+      $.ajax({
+        url: `${API_URL}/auth/signup`,
+        type: 'POST',
+        data: JSON.stringify(signupData),
+        contentType: 'application/json',
+        success: function(response) {
+          showSuccess('Registrasi berhasil. Silakan login dengan akun baru Anda.');
+          
+          // Reset form
+          document.getElementById('signup-form').reset();
+          
+          // Switch to login tab
+          setTimeout(() => {
+            document.querySelector('.tab-option').click();
+          }, 1500);
+        },
+        error: function(xhr) {
+          showError(xhr.responseJSON.message || 'Registrasi gagal. Silakan coba lagi.');
+        }
+      });
+    }
+    
+    // Show success modal
+    function showSuccess(message) {
+      document.getElementById('success-message').textContent = message;
+      document.getElementById('success-modal').classList.remove('hidden');
+    }
+    
+    // Show error modal
+    function showError(message) {
+      document.getElementById('error-message').textContent = message;
+      document.getElementById('error-modal').classList.remove('hidden');
+    }
+    
+    // Close modal
+    function closeModal(modalId) {
+      document.getElementById(modalId).classList.add('hidden');
+    }
+  </script>
+</body>
+</html>

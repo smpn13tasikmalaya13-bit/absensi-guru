@@ -1,0 +1,1516 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard Admin - Sistem Absensi Guru</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    .sidebar {
+      background-color: #1e40af;
+      min-height: 100vh;
+    }
+    .sidebar-item {
+      transition: all 0.3s;
+    }
+    .sidebar-item:hover {
+      background-color: #1d4ed8;
+    }
+    .sidebar-item.active {
+      background-color: #1e3a8a;
+      border-left: 4px solid #3b82f6;
+    }
+    .card {
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    }
+    .btn-primary {
+      background-color: #3b82f6;
+    }
+    .btn-primary:hover {
+      background-color: #2563eb;
+    }
+    .table-header {
+      background-color: #eff6ff;
+    }
+  </style>
+</head>
+<body class="bg-gray-100">
+  <div class="flex">
+    <!-- Sidebar -->
+    <div class="sidebar w-64 text-white">
+      <div class="p-4">
+        <h1 class="text-2xl font-bold">Absensi Guru</h1>
+        <p class="text-sm text-blue-200">Dashboard Admin</p>
+      </div>
+      <nav class="mt-6">
+        <a href="#" class="sidebar-item active block px-4 py-3" onclick="showSection('dashboard')">
+          <i class="fas fa-tachometer-alt mr-3"></i> Dashboard
+        </a>
+        <a href="#" class="sidebar-item block px-4 py-3" onclick="showSection('guru')">
+          <i class="fas fa-user-tie mr-3"></i> Data Guru
+        </a>
+        <a href="#" class="sidebar-item block px-4 py-3" onclick="showSection('kelas')">
+          <i class="fas fa-school mr-3"></i> Data Kelas
+        </a>
+        <a href="#" class="sidebar-item block px-4 py-3" onclick="showSection('jadwal')">
+          <i class="fas fa-calendar-alt mr-3"></i> Jadwal Pelajaran
+        </a>
+        <a href="#" class="sidebar-item block px-4 py-3" onclick="showSection('laporan')">
+          <i class="fas fa-chart-bar mr-3"></i> Laporan Absensi
+        </a>
+        <a href="#" class="sidebar-item block px-4 py-3" onclick="showSection('akun')">
+          <i class="fas fa-users-cog mr-3"></i> Kelola Akun
+        </a>
+        <a href="#" class="sidebar-item block px-4 py-3" onclick="showSection('pengaturan')">
+          <i class="fas fa-cog mr-3"></i> Pengaturan
+        </a>
+        <a href="#" class="sidebar-item block px-4 py-3 mt-8" onclick="logout()">
+          <i class="fas fa-sign-out-alt mr-3"></i> Logout
+        </a>
+      </nav>
+    </div>
+
+    <!-- Main Content -->
+    <div class="flex-1 p-8">
+      <!-- Header -->
+      <div class="flex justify-between items-center mb-8">
+        <h2 class="text-2xl font-bold text-gray-800" id="section-title">Dashboard</h2>
+        <div class="flex items-center">
+          <span class="text-gray-700 mr-2">Admin</span>
+          <div class="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white">
+            <i class="fas fa-user"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dashboard Section -->
+      <div id="dashboard-section" class="section">
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <div class="card bg-white p-6 rounded-lg">
+            <div class="flex items-center">
+              <div class="p-3 rounded-full bg-blue-100 text-blue-500">
+                <i class="fas fa-user-tie text-2xl"></i>
+              </div>
+              <div class="ml-4">
+                <h3 class="text-lg font-semibold text-gray-700">Total Guru</h3>
+                <p class="text-2xl font-bold" id="total-guru">0</p>
+              </div>
+            </div>
+          </div>
+          <div class="card bg-white p-6 rounded-lg">
+            <div class="flex items-center">
+              <div class="p-3 rounded-full bg-green-100 text-green-500">
+                <i class="fas fa-school text-2xl"></i>
+              </div>
+              <div class="ml-4">
+                <h3 class="text-lg font-semibold text-gray-700">Total Kelas</h3>
+                <p class="text-2xl font-bold" id="total-kelas">0</p>
+              </div>
+            </div>
+          </div>
+          <div class="card bg-white p-6 rounded-lg">
+            <div class="flex items-center">
+              <div class="p-3 rounded-full bg-yellow-100 text-yellow-500">
+                <i class="fas fa-calendar-check text-2xl"></i>
+              </div>
+              <div class="ml-4">
+                <h3 class="text-lg font-semibold text-gray-700">Absensi Hari Ini</h3>
+                <p class="text-2xl font-bold" id="absensi-hari-ini">0</p>
+              </div>
+            </div>
+          </div>
+          <div class="card bg-white p-6 rounded-lg">
+            <div class="flex items-center">
+              <div class="p-3 rounded-full bg-purple-100 text-purple-500">
+                <i class="fas fa-percentage text-2xl"></i>
+              </div>
+              <div class="ml-4">
+                <h3 class="text-lg font-semibold text-gray-700">Kehadiran</h3>
+                <p class="text-2xl font-bold" id="persentase-kehadiran">0%</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div class="card bg-white p-6 rounded-lg">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Grafik Kehadiran per Hari</h3>
+            <canvas id="kehadiran-chart"></canvas>
+          </div>
+          <div class="card bg-white p-6 rounded-lg">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Grafik Kehadiran per Guru</h3>
+            <canvas id="guru-chart"></canvas>
+          </div>
+        </div>
+
+        <!-- Recent Attendance -->
+        <div class="card bg-white p-6 rounded-lg mt-6">
+          <h3 class="text-lg font-semibold text-gray-800 mb-4">Absensi Terbaru</h3>
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="table-header">
+                <tr>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Guru</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kelas</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jam</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Waktu</th>
+                </tr>
+              </thead>
+              <tbody class="bg-white divide-y divide-gray-200" id="recent-attendance">
+                <!-- Data will be populated by JavaScript -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Guru Section -->
+      <div id="guru-section" class="section hidden">
+        <div class="flex justify-between items-center mb-6">
+          <h3 class="text-xl font-semibold text-gray-800">Data Guru</h3>
+          <button class="btn-primary text-white px-4 py-2 rounded-lg" onclick="showAddGuruModal()">
+            <i class="fas fa-plus mr-2"></i> Tambah Guru
+          </button>
+        </div>
+        
+        <div class="card bg-white p-6 rounded-lg">
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="table-header">
+                <tr>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">NIP</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No. HP</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Username</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Device ID</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
+                </tr>
+              </thead>
+              <tbody class="bg-white divide-y divide-gray-200" id="guru-table">
+                <!-- Data will be populated by JavaScript -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Kelas Section -->
+      <div id="kelas-section" class="section hidden">
+        <div class="flex justify-between items-center mb-6">
+          <h3 class="text-xl font-semibold text-gray-800">Data Kelas</h3>
+          <button class="btn-primary text-white px-4 py-2 rounded-lg" onclick="showAddKelasModal()">
+            <i class="fas fa-plus mr-2"></i> Tambah Kelas
+          </button>
+        </div>
+        
+        <div class="card bg-white p-6 rounded-lg">
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="table-header">
+                <tr>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tingkat</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Kelas</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jurusan</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">QR Code</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
+                </tr>
+              </thead>
+              <tbody class="bg-white divide-y divide-gray-200" id="kelas-table">
+                <!-- Data will be populated by JavaScript -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Jadwal Section -->
+      <div id="jadwal-section" class="section hidden">
+        <div class="flex justify-between items-center mb-6">
+          <h3 class="text-xl font-semibold text-gray-800">Jadwal Pelajaran</h3>
+          <button class="btn-primary text-white px-4 py-2 rounded-lg" onclick="showAddJadwalModal()">
+            <i class="fas fa-plus mr-2"></i> Tambah Jadwal
+          </button>
+        </div>
+        
+        <div class="card bg-white p-6 rounded-lg">
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="table-header">
+                <tr>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hari</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jam</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mata Pelajaran</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Guru</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kelas</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
+                </tr>
+              </thead>
+              <tbody class="bg-white divide-y divide-gray-200" id="jadwal-table">
+                <!-- Data will be populated by JavaScript -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Laporan Section -->
+      <div id="laporan-section" class="section hidden">
+        <h3 class="text-xl font-semibold text-gray-800 mb-6">Laporan Absensi</h3>
+        
+        <div class="card bg-white p-6 rounded-lg mb-6">
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal</label>
+              <input type="date" id="filter-tanggal" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Guru</label>
+              <select id="filter-guru" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                <option value="">Semua Guru</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Kelas</label>
+              <select id="filter-kelas" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                <option value="">Semua Kelas</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Jam Pelajaran</label>
+              <select id="filter-jam" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                <option value="">Semua Jam</option>
+                <option value="1">Jam 1</option>
+                <option value="2">Jam 2</option>
+                <option value="3">Jam 3</option>
+                <option value="4">Jam 4</option>
+                <option value="5">Jam 5</option>
+                <option value="6">Jam 6</option>
+                <option value="7">Jam 7</option>
+                <option value="8">Jam 8</option>
+              </select>
+            </div>
+          </div>
+          <div class="flex justify-end mt-4 space-x-2">
+            <button class="bg-gray-200 text-gray-800 px-4 py-2 rounded-md" onclick="resetFilters()">
+              <i class="fas fa-redo mr-2"></i> Reset
+            </button>
+            <button class="btn-primary text-white px-4 py-2 rounded-md" onclick="filterLaporan()">
+              <i class="fas fa-filter mr-2"></i> Filter
+            </button>
+            <button class="bg-green-500 text-white px-4 py-2 rounded-md" onclick="exportLaporan('excel')">
+              <i class="fas fa-file-excel mr-2"></i> Export Excel
+            </button>
+            <button class="bg-red-500 text-white px-4 py-2 rounded-md" onclick="exportLaporan('pdf')">
+              <i class="fas fa-file-pdf mr-2"></i> Export PDF
+            </button>
+          </div>
+        </div>
+        
+        <div class="card bg-white p-6 rounded-lg">
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="table-header">
+                <tr>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Guru</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kelas</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jam</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Waktu Scan</th>
+                </tr>
+              </thead>
+              <tbody class="bg-white divide-y divide-gray-200" id="laporan-table">
+                <!-- Data will be populated by JavaScript -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Akun Section -->
+      <div id="akun-section" class="section hidden">
+        <div class="flex justify-between items-center mb-6">
+          <h3 class="text-xl font-semibold text-gray-800">Kelola Akun</h3>
+          <button class="btn-primary text-white px-4 py-2 rounded-lg" onclick="showAddAkunModal()">
+            <i class="fas fa-plus mr-2"></i> Tambah Akun
+          </button>
+        </div>
+        
+        <div class="card bg-white p-6 rounded-lg">
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="table-header">
+                <tr>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Username</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Detail</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
+                </tr>
+              </thead>
+              <tbody class="bg-white divide-y divide-gray-200" id="akun-table">
+                <!-- Data will be populated by JavaScript -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pengaturan Section -->
+      <div id="pengaturan-section" class="section hidden">
+        <h3 class="text-xl font-semibold text-gray-800 mb-6">Pengaturan</h3>
+        
+        <div class="card bg-white p-6 rounded-lg">
+          <h4 class="text-lg font-medium text-gray-800 mb-4">Ganti Password</h4>
+          <form id="change-password-form" onsubmit="changePassword(event)">
+            <div class="mb-4">
+              <label class="block text-sm font-medium text-gray-700 mb-1">Password Lama</label>
+              <input type="password" id="old-password" class="w-full px-3 py-2 border border-gray-300 rounded-md" required>
+            </div>
+            <div class="mb-4">
+              <label class="block text-sm font-medium text-gray-700 mb-1">Password Baru</label>
+              <input type="password" id="new-password" class="w-full px-3 py-2 border border-gray-300 rounded-md" required>
+            </div>
+            <div class="mb-4">
+              <label class="block text-sm font-medium text-gray-700 mb-1">Konfirmasi Password Baru</label>
+              <input type="password" id="confirm-password" class="w-full px-3 py-2 border border-gray-300 rounded-md" required>
+            </div>
+            <button type="submit" class="btn-primary text-white px-4 py-2 rounded-md">
+              <i class="fas fa-save mr-2"></i> Simpan
+            </button>
+          </form>
+        </div>
+        
+        <div class="card bg-white p-6 rounded-lg mt-6">
+          <h4 class="text-lg font-medium text-gray-800 mb-4">Log Audit</h4>
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="table-header">
+                <tr>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Waktu</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Detail</th>
+                </tr>
+              </thead>
+              <tbody class="bg-white divide-y divide-gray-200" id="audit-log-table">
+                <!-- Data will be populated by JavaScript -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Guru Modal -->
+  <div id="add-guru-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+    <div class="bg-white rounded-lg p-6 w-full max-w-md">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg font-semibold text-gray-800">Tambah Guru</h3>
+        <button onclick="closeModal('add-guru-modal')" class="text-gray-500 hover:text-gray-700">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <form id="add-guru-form" onsubmit="addGuru(event)">
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 mb-1">NIP</label>
+          <input type="text" id="guru-nip" class="w-full px-3 py-2 border border-gray-300 rounded-md" required>
+        </div>
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Nama</label>
+          <input type="text" id="guru-nama" class="w-full px-3 py-2 border border-gray-300 rounded-md" required>
+        </div>
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+          <input type="email" id="guru-email" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+        </div>
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 mb-1">No. HP</label>
+          <input type="text" id="guru-nohp" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+        </div>
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Username</label>
+          <input type="text" id="guru-username" class="w-full px-3 py-2 border border-gray-300 rounded-md" required>
+        </div>
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+          <input type="password" id="guru-password" class="w-full px-3 py-2 border border-gray-300 rounded-md" required>
+        </div>
+        <div class="flex justify-end space-x-2">
+          <button type="button" onclick="closeModal('add-guru-modal')" class="bg-gray-200 text-gray-800 px-4 py-2 rounded-md">
+            Batal
+          </button>
+          <button type="submit" class="btn-primary text-white px-4 py-2 rounded-md">
+            Simpan
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Add Kelas Modal -->
+  <div id="add-kelas-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+    <div class="bg-white rounded-lg p-6 w-full max-w-md">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg font-semibold text-gray-800">Tambah Kelas</h3>
+        <button onclick="closeModal('add-kelas-modal')" class="text-gray-500 hover:text-gray-700">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <form id="add-kelas-form" onsubmit="addKelas(event)">
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Tingkat</label>
+          <select id="kelas-tingkat" class="w-full px-3 py-2 border border-gray-300 rounded-md" required>
+            <option value="">Pilih Tingkat</option>
+            <option value="VII">VII</option>
+            <option value="VIII">VIII</option>
+            <option value="IX">IX</option>
+            <option value="X">X</option>
+            <option value="XI">XI</option>
+            <option value="XII">XII</option>
+          </select>
+        </div>
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Nama Kelas</label>
+          <input type="text" id="kelas-nama" class="w-full px-3 py-2 border border-gray-300 rounded-md" required>
+        </div>
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Jurusan</label>
+          <input type="text" id="kelas-jurusan" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+        </div>
+        <div class="flex justify-end space-x-2">
+          <button type="button" onclick="closeModal('add-kelas-modal')" class="bg-gray-200 text-gray-800 px-4 py-2 rounded-md">
+            Batal
+          </button>
+          <button type="submit" class="btn-primary text-white px-4 py-2 rounded-md">
+            Simpan
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Add Jadwal Modal -->
+  <div id="add-jadwal-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+    <div class="bg-white rounded-lg p-6 w-full max-w-md">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg font-semibold text-gray-800">Tambah Jadwal</h3>
+        <button onclick="closeModal('add-jadwal-modal')" class="text-gray-500 hover:text-gray-700">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <form id="add-jadwal-form" onsubmit="addJadwal(event)">
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Hari</label>
+          <select id="jadwal-hari" class="w-full px-3 py-2 border border-gray-300 rounded-md" required>
+            <option value="">Pilih Hari</option>
+            <option value="Senin">Senin</option>
+            <option value="Selasa">Selasa</option>
+            <option value="Rabu">Rabu</option>
+            <option value="Kamis">Kamis</option>
+            <option value="Jumat">Jumat</option>
+            <option value="Sabtu">Sabtu</option>
+          </select>
+        </div>
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Jam Ke</label>
+          <select id="jadwal-jam-ke" class="w-full px-3 py-2 border border-gray-300 rounded-md" required>
+            <option value="">Pilih Jam</option>
+            <option value="1">Jam 1</option>
+            <option value="2">Jam 2</option>
+            <option value="3">Jam 3</option>
+            <option value="4">Jam 4</option>
+            <option value="5">Jam 5</option>
+            <option value="6">Jam 6</option>
+            <option value="7">Jam 7</option>
+            <option value="8">Jam 8</option>
+          </select>
+        </div>
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Jam Mulai</label>
+          <input type="time" id="jadwal-jam-mulai" class="w-full px-3 py-2 border border-gray-300 rounded-md" required>
+        </div>
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Jam Selesai</label>
+          <input type="time" id="jadwal-jam-selesai" class="w-full px-3 py-2 border border-gray-300 rounded-md" required>
+        </div>
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Mata Pelajaran</label>
+          <input type="text" id="jadwal-mapel" class="w-full px-3 py-2 border border-gray-300 rounded-md" required>
+        </div>
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Guru</label>
+          <select id="jadwal-guru" class="w-full px-3 py-2 border border-gray-300 rounded-md" required>
+            <option value="">Pilih Guru</option>
+          </select>
+        </div>
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Kelas</label>
+          <select id="jadwal-kelas" class="w-full px-3 py-2 border border-gray-300 rounded-md" required>
+            <option value="">Pilih Kelas</option>
+          </select>
+        </div>
+        <div class="flex justify-end space-x-2">
+          <button type="button" onclick="closeModal('add-jadwal-modal')" class="bg-gray-200 text-gray-800 px-4 py-2 rounded-md">
+            Batal
+          </button>
+          <button type="submit" class="btn-primary text-white px-4 py-2 rounded-md">
+            Simpan
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Add Akun Modal -->
+  <div id="add-akun-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+    <div class="bg-white rounded-lg p-6 w-full max-w-md">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg font-semibold text-gray-800">Tambah Akun</h3>
+        <button onclick="closeModal('add-akun-modal')" class="text-gray-500 hover:text-gray-700">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <form id="add-akun-form" onsubmit="addAkun(event)">
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Role</label>
+          <select id="akun-role" class="w-full px-3 py-2 border border-gray-300 rounded-md" required onchange="toggleAkunFields()">
+            <option value="">Pilih Role</option>
+            <option value="admin">Admin</option>
+            <option value="guru">Guru</option>
+          </select>
+        </div>
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Username</label>
+          <input type="text" id="akun-username" class="w-full px-3 py-2 border border-gray-300 rounded-md" required>
+        </div>
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+          <input type="password" id="akun-password" class="w-full px-3 py-2 border border-gray-300 rounded-md" required>
+        </div>
+        <div id="akun-guru-fields" style="display: none;">
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Nama Lengkap</label>
+            <input type="text" id="akun-nama" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+          </div>
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-1">NIP</label>
+            <input type="text" id="akun-nip" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+          </div>
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <input type="email" id="akun-email" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+          </div>
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-1">No. HP</label>
+            <input type="text" id="akun-nohp" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+          </div>
+        </div>
+        <div class="flex justify-end space-x-2">
+          <button type="button" onclick="closeModal('add-akun-modal')" class="bg-gray-200 text-gray-800 px-4 py-2 rounded-md">
+            Batal
+          </button>
+          <button type="submit" class="btn-primary text-white px-4 py-2 rounded-md">
+            Simpan
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- QR Code Modal -->
+  <div id="qrcode-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+    <div class="bg-white rounded-lg p-6 w-full max-w-md">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg font-semibold text-gray-800">QR Code Kelas</h3>
+        <button onclick="closeModal('qrcode-modal')" class="text-gray-500 hover:text-gray-700">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="text-center">
+        <div id="qrcode-container" class="mb-4"></div>
+        <p class="text-sm text-gray-600 mb-4">QR Code untuk kelas: <span id="qrcode-kelas-name" class="font-semibold"></span></p>
+        <button onclick="printQRCode()" class="btn-primary text-white px-4 py-2 rounded-md">
+          <i class="fas fa-print mr-2"></i> Cetak QR Code
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // API URL
+    const API_URL = 'http://localhost:3000';
+    
+    // Token
+    let token = localStorage.getItem('token');
+    
+    // Check if user is logged in
+    if (!token) {
+      window.location.href = 'login.html';
+    }
+    
+    // Set token for all API requests
+    $.ajaxSetup({
+      beforeSend: function(xhr) {
+        xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+      }
+    });
+    
+    // Show section
+    function showSection(sectionName) {
+      // Hide all sections
+      document.querySelectorAll('.section').forEach(section => {
+        section.classList.add('hidden');
+      });
+      
+      // Show selected section
+      document.getElementById(`${sectionName}-section`).classList.remove('hidden');
+      
+      // Update section title
+      document.getElementById('section-title').textContent = 
+        sectionName.charAt(0).toUpperCase() + sectionName.slice(1);
+      
+      // Update active sidebar item
+      document.querySelectorAll('.sidebar-item').forEach(item => {
+        item.classList.remove('active');
+      });
+      event.target.closest('.sidebar-item').classList.add('active');
+      
+      // Load section data
+      switch(sectionName) {
+        case 'dashboard':
+          loadDashboard();
+          break;
+        case 'guru':
+          loadGuru();
+          break;
+        case 'kelas':
+          loadKelas();
+          break;
+        case 'jadwal':
+          loadJadwal();
+          break;
+        case 'laporan':
+          loadLaporan();
+          break;
+        case 'akun':
+          loadAkun();
+          break;
+        case 'pengaturan':
+          loadPengaturan();
+          break;
+      }
+    }
+    
+    // Load dashboard data
+    function loadDashboard() {
+      // Get total guru
+      $.get(`${API_URL}/guru`, function(data) {
+        document.getElementById('total-guru').textContent = data.length;
+      });
+      
+      // Get total kelas
+      $.get(`${API_URL}/kelas`, function(data) {
+        document.getElementById('total-kelas').textContent = data.length;
+      });
+      
+      // Get today's attendance
+      const today = new Date().toISOString().split('T')[0];
+      $.get(`${API_URL}/laporan?tanggal=${today}`, function(data) {
+        document.getElementById('absensi-hari-ini').textContent = data.length;
+      });
+      
+      // Get attendance percentage
+      $.get(`${API_URL}/jadwal`, function(jadwalData) {
+        const totalJadwal = jadwalData.length;
+        $.get(`${API_URL}/laporan?tanggal=${today}`, function(absensiData) {
+          const percentage = totalJadwal > 0 ? Math.round((absensiData.length / totalJadwal) * 100) : 0;
+          document.getElementById('persentase-kehadiran').textContent = `${percentage}%`;
+        });
+      });
+      
+      // Load recent attendance
+      $.get(`${API_URL}/laporan`, function(data) {
+        const recentAttendance = data.slice(0, 5);
+        const tbody = document.getElementById('recent-attendance');
+        tbody.innerHTML = '';
+        
+        recentAttendance.forEach(item => {
+          const row = `
+            <tr>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm font-medium text-gray-900">${item.guru.nama}</div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-900">${item.kelas.tingkat} ${item.kelas.nama}</div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                Jam ${item.jam_ke}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                ${new Date(item.waktu_scan).toLocaleString('id-ID')}
+              </td>
+            </tr>
+          `;
+          tbody.innerHTML += row;
+        });
+      });
+      
+      // Load charts
+      loadCharts();
+    }
+    
+    // Load charts
+    function loadCharts() {
+      // Kehadiran per hari chart
+      const kehadiranCtx = document.getElementById('kehadiran-chart').getContext('2d');
+      
+      // Get data for the last 7 days
+      const days = [];
+      const counts = [];
+      
+      for (let i = 6; i >= 0; i--) {
+        const date = new Date();
+        date.setDate(date.getDate() - i);
+        const dateStr = date.toISOString().split('T')[0];
+        const dayName = date.toLocaleDateString('id-ID', { weekday: 'short' });
+        
+        days.push(dayName);
+        
+        $.get(`${API_URL}/laporan?tanggal=${dateStr}`, function(data) {
+          counts.push(data.length);
+          
+          if (counts.length === 7) {
+            new Chart(kehadiranCtx, {
+              type: 'bar',
+              data: {
+                labels: days,
+                datasets: [{
+                  label: 'Jumlah Kehadiran',
+                  data: counts,
+                  backgroundColor: 'rgba(59, 130, 246, 0.5)',
+                  borderColor: 'rgba(59, 130, 246, 1)',
+                  borderWidth: 1
+                }]
+              },
+              options: {
+                scales: {
+                  y: {
+                    beginAtZero: true
+                  }
+                }
+              }
+            });
+          }
+        });
+      }
+      
+      // Kehadiran per guru chart
+      const guruCtx = document.getElementById('guru-chart').getContext('2d');
+      
+      $.get(`${API_URL}/guru`, function(guruData) {
+        const guruNames = guruData.map(guru => guru.nama);
+        const guruCounts = [];
+        
+        const today = new Date().toISOString().split('T')[0];
+        
+        guruData.forEach((guru, index) => {
+          $.get(`${API_URL}/laporan?tanggal=${today}&guruId=${guru.id}`, function(data) {
+            guruCounts.push(data.length);
+            
+            if (guruCounts.length === guruData.length) {
+              new Chart(guruCtx, {
+                type: 'bar',
+                data: {
+                  labels: guruNames,
+                  datasets: [{
+                    label: 'Jumlah Kehadiran',
+                    data: guruCounts,
+                    backgroundColor: 'rgba(16, 185, 129, 0.5)',
+                    borderColor: 'rgba(16, 185, 129, 1)',
+                    borderWidth: 1
+                  }]
+                },
+                options: {
+                  scales: {
+                    y: {
+                      beginAtZero: true
+                    }
+                  }
+                }
+              });
+            }
+          });
+        });
+      });
+    }
+    
+    // Load guru data
+    function loadGuru() {
+      $.get(`${API_URL}/guru`, function(data) {
+        const tbody = document.getElementById('guru-table');
+        tbody.innerHTML = '';
+        
+        data.forEach(guru => {
+          const row = `
+            <tr>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-900">${guru.nip || '-'}</div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm font-medium text-gray-900">${guru.nama}</div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-900">${guru.email || '-'}</div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-900">${guru.no_hp || '-'}</div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-900">${guru.user.username}</div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-900">${guru.user.device_id || '-'}</div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                <button class="text-blue-600 hover:text-blue-900 mr-3" onclick="resetDevice('${guru.id}')">
+                  <i class="fas fa-mobile-alt"></i> Reset Device
+                </button>
+                <button class="text-red-600 hover:text-red-900" onclick="deleteGuru('${guru.id}')">
+                  <i class="fas fa-trash"></i> Hapus
+                </button>
+              </td>
+            </tr>
+          `;
+          tbody.innerHTML += row;
+        });
+      });
+    }
+    
+    // Load kelas data
+    function loadKelas() {
+      $.get(`${API_URL}/kelas`, function(data) {
+        const tbody = document.getElementById('kelas-table');
+        tbody.innerHTML = '';
+        
+        data.forEach(kelas => {
+          const row = `
+            <tr>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-900">${kelas.tingkat}</div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm font-medium text-gray-900">${kelas.nama}</div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-900">${kelas.jurusan || '-'}</div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <button class="text-blue-600 hover:text-blue-900" onclick="showQRCode('${kelas.id}', '${kelas.tingkat} ${kelas.nama}')">
+                  <i class="fas fa-qrcode"></i> Lihat QR
+                </button>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                <button class="text-red-600 hover:text-red-900" onclick="deleteKelas('${kelas.id}')">
+                  <i class="fas fa-trash"></i> Hapus
+                </button>
+              </td>
+            </tr>
+          `;
+          tbody.innerHTML += row;
+        });
+      });
+    }
+    
+    // Load jadwal data
+    function loadJadwal() {
+      $.get(`${API_URL}/jadwal`, function(data) {
+        const tbody = document.getElementById('jadwal-table');
+        tbody.innerHTML = '';
+        
+        data.forEach(jadwal => {
+          const row = `
+            <tr>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-900">${jadwal.hari}</div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-900">Jam ${jadwal.jam_ke} (${jadwal.jam_mulai} - ${jadwal.jam_selesai})</div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm font-medium text-gray-900">${jadwal.mata_pelajaran}</div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-900">${jadwal.guru.nama}</div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-900">${jadwal.kelas.tingkat} ${jadwal.kelas.nama}</div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                <button class="text-red-600 hover:text-red-900" onclick="deleteJadwal('${jadwal.id}')">
+                  <i class="fas fa-trash"></i> Hapus
+                </button>
+              </td>
+            </tr>
+          `;
+          tbody.innerHTML += row;
+        });
+      });
+      
+      // Load options for add jadwal modal
+      $.get(`${API_URL}/guru`, function(guruData) {
+        const guruSelect = document.getElementById('jadwal-guru');
+        guruSelect.innerHTML = '<option value="">Pilih Guru</option>';
+        
+        guruData.forEach(guru => {
+          const option = `<option value="${guru.id}">${guru.nama}</option>`;
+          guruSelect.innerHTML += option;
+        });
+      });
+      
+      $.get(`${API_URL}/kelas`, function(kelasData) {
+        const kelasSelect = document.getElementById('jadwal-kelas');
+        kelasSelect.innerHTML = '<option value="">Pilih Kelas</option>';
+        
+        kelasData.forEach(kelas => {
+          const option = `<option value="${kelas.id}">${kelas.tingkat} ${kelas.nama}</option>`;
+          kelasSelect.innerHTML += option;
+        });
+      });
+    }
+    
+    // Load laporan data
+    function loadLaporan() {
+      // Load filter options
+      $.get(`${API_URL}/guru`, function(guruData) {
+        const guruSelect = document.getElementById('filter-guru');
+        guruSelect.innerHTML = '<option value="">Semua Guru</option>';
+        
+        guruData.forEach(guru => {
+          const option = `<option value="${guru.id}">${guru.nama}</option>`;
+          guruSelect.innerHTML += option;
+        });
+      });
+      
+      $.get(`${API_URL}/kelas`, function(kelasData) {
+        const kelasSelect = document.getElementById('filter-kelas');
+        kelasSelect.innerHTML = '<option value="">Semua Kelas</option>';
+        
+        kelasData.forEach(kelas => {
+          const option = `<option value="${kelas.id}">${kelas.tingkat} ${kelas.nama}</option>`;
+          kelasSelect.innerHTML += option;
+        });
+      });
+      
+      // Load laporan data
+      filterLaporan();
+    }
+    
+    // Filter laporan
+    function filterLaporan() {
+      const tanggal = document.getElementById('filter-tanggal').value;
+      const guruId = document.getElementById('filter-guru').value;
+      const kelasId = document.getElementById('filter-kelas').value;
+      const jamKe = document.getElementById('filter-jam').value;
+      
+      let url = `${API_URL}/laporan?`;
+      
+      if (tanggal) url += `tanggal=${tanggal}&`;
+      if (guruId) url += `guruId=${guruId}&`;
+      if (kelasId) url += `kelasId=${kelasId}&`;
+      if (jamKe) url += `jamKe=${jamKe}&`;
+      
+      $.get(url, function(data) {
+        const tbody = document.getElementById('laporan-table');
+        tbody.innerHTML = '';
+        
+        data.forEach(item => {
+          const row = `
+            <tr>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm font-medium text-gray-900">${item.guru.nama}</div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-900">${item.kelas.tingkat} ${item.kelas.nama}</div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-900">Jam ${item.jam_ke}</div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-900">${new Date(item.waktu_scan).toLocaleString('id-ID')}</div>
+              </td>
+            </tr>
+          `;
+          tbody.innerHTML += row;
+        });
+      });
+    }
+    
+    // Reset filters
+    function resetFilters() {
+      document.getElementById('filter-tanggal').value = '';
+      document.getElementById('filter-guru').value = '';
+      document.getElementById('filter-kelas').value = '';
+      document.getElementById('filter-jam').value = '';
+      
+      filterLaporan();
+    }
+    
+    // Export laporan
+    function exportLaporan(format) {
+      const tanggal = document.getElementById('filter-tanggal').value;
+      const guruId = document.getElementById('filter-guru').value;
+      const kelasId = document.getElementById('filter-kelas').value;
+      const jamKe = document.getElementById('filter-jam').value;
+      
+      let url = `${API_URL}/laporan?format=${format}&`;
+      
+      if (tanggal) url += `tanggal=${tanggal}&`;
+      if (guruId) url += `guruId=${guruId}&`;
+      if (kelasId) url += `kelasId=${kelasId}&`;
+      if (jamKe) url += `jamKe=${jamKe}&`;
+      
+      window.open(url, '_blank');
+    }
+    
+    // Load akun data
+    function loadAkun() {
+      $.get(`${API_URL}/users`, function(data) {
+        const tbody = document.getElementById('akun-table');
+        tbody.innerHTML = '';
+        
+        data.forEach(user => {
+          const roleBadge = user.role === 'admin' 
+            ? '<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800">Admin</span>'
+            : '<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">Guru</span>';
+          
+          const statusBadge = user.device_id 
+            ? '<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Aktif</span>'
+            : '<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">Belum Aktif</span>';
+          
+          let detailInfo = '-';
+          if (user.role === 'guru' && user.guru) {
+            detailInfo = user.guru.nama;
+            if (user.guru.nip) detailInfo += `<br><small>NIP: ${user.guru.nip}</small>`;
+          }
+          
+          const row = `
+            <tr>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm font-medium text-gray-900">${user.username}</div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                ${roleBadge}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-900">${detailInfo}</div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                ${statusBadge}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                ${user.role === 'guru' ? `
+                  <button class="text-blue-600 hover:text-blue-900 mr-3" onclick="resetDevice('${user.guru.id}')">
+                    <i class="fas fa-mobile-alt"></i> Reset Device
+                  </button>
+                ` : ''}
+                <button class="text-red-600 hover:text-red-900" onclick="deleteAkun('${user.id}')">
+                  <i class="fas fa-trash"></i> Hapus
+                </button>
+              </td>
+            </tr>
+          `;
+          tbody.innerHTML += row;
+        });
+      });
+    }
+    
+    // Load pengaturan data
+    function loadPengaturan() {
+      // Load audit log
+      $.get(`${API_URL}/audit-log`, function(data) {
+        const tbody = document.getElementById('audit-log-table');
+        tbody.innerHTML = '';
+        
+        data.slice(0, 10).forEach(log => {
+          const row = `
+            <tr>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-900">${new Date(log.created_at).toLocaleString('id-ID')}</div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-900">${log.user_id}</div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-900">${log.aksi}</div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-900">${log.detail}</div>
+              </td>
+            </tr>
+          `;
+          tbody.innerHTML += row;
+        });
+      });
+    }
+    
+    // Show modal
+    function showModal(modalId) {
+      document.getElementById(modalId).classList.remove('hidden');
+    }
+    
+    // Close modal
+    function closeModal(modalId) {
+      document.getElementById(modalId).classList.add('hidden');
+    }
+    
+    // Show add guru modal
+    function showAddGuruModal() {
+      document.getElementById('add-guru-form').reset();
+      showModal('add-guru-modal');
+    }
+    
+    // Add guru
+    function addGuru(event) {
+      event.preventDefault();
+      
+      const guruData = {
+        nip: document.getElementById('guru-nip').value,
+        nama: document.getElementById('guru-nama').value,
+        email: document.getElementById('guru-email').value,
+        no_hp: document.getElementById('guru-nohp').value,
+        username: document.getElementById('guru-username').value,
+        password: document.getElementById('guru-password').value
+      };
+      
+      $.ajax({
+        url: `${API_URL}/guru`,
+        type: 'POST',
+        data: JSON.stringify(guruData),
+        contentType: 'application/json',
+        success: function(response) {
+          alert('Guru berhasil ditambahkan');
+          closeModal('add-guru-modal');
+          loadGuru();
+        },
+        error: function(xhr) {
+          alert('Error: ' + xhr.responseJSON.message);
+        }
+      });
+    }
+    
+    // Show add kelas modal
+    function showAddKelasModal() {
+      document.getElementById('add-kelas-form').reset();
+      showModal('add-kelas-modal');
+    }
+    
+    // Add kelas
+    function addKelas(event) {
+      event.preventDefault();
+      
+      const kelasData = {
+        tingkat: document.getElementById('kelas-tingkat').value,
+        nama: document.getElementById('kelas-nama').value,
+        jurusan: document.getElementById('kelas-jurusan').value
+      };
+      
+      $.ajax({
+        url: `${API_URL}/kelas`,
+        type: 'POST',
+        data: JSON.stringify(kelasData),
+        contentType: 'application/json',
+        success: function(response) {
+          alert('Kelas berhasil ditambahkan');
+          closeModal('add-kelas-modal');
+          loadKelas();
+        },
+        error: function(xhr) {
+          alert('Error: ' + xhr.responseJSON.message);
+        }
+      });
+    }
+    
+    // Show add jadwal modal
+    function showAddJadwalModal() {
+      document.getElementById('add-jadwal-form').reset();
+      showModal('add-jadwal-modal');
+    }
+    
+    // Add jadwal
+    function addJadwal(event) {
+      event.preventDefault();
+      
+      const jadwalData = {
+        hari: document.getElementById('jadwal-hari').value,
+        jam_ke: parseInt(document.getElementById('jadwal-jam-ke').value),
+        jam_mulai: document.getElementById('jadwal-jam-mulai').value,
+        jam_selesai: document.getElementById('jadwal-jam-selesai').value,
+        mata_pelajaran: document.getElementById('jadwal-mapel').value,
+        guru_id: document.getElementById('jadwal-guru').value,
+        kelas_id: document.getElementById('jadwal-kelas').value
+      };
+      
+      $.ajax({
+        url: `${API_URL}/jadwal`,
+        type: 'POST',
+        data: JSON.stringify(jadwalData),
+        contentType: 'application/json',
+        success: function(response) {
+          alert('Jadwal berhasil ditambahkan');
+          closeModal('add-jadwal-modal');
+          loadJadwal();
+        },
+        error: function(xhr) {
+          alert('Error: ' + xhr.responseJSON.message);
+        }
+      });
+    }
+    
+    // Show add akun modal
+    function showAddAkunModal() {
+      document.getElementById('add-akun-form').reset();
+      document.getElementById('akun-guru-fields').style.display = 'none';
+      showModal('add-akun-modal');
+    }
+    
+    // Toggle akun fields based on role
+    function toggleAkunFields() {
+      const role = document.getElementById('akun-role').value;
+      const guruFields = document.getElementById('akun-guru-fields');
+      
+      if (role === 'guru') {
+        guruFields.style.display = 'block';
+        document.getElementById('akun-nama').setAttribute('required', 'required');
+      } else {
+        guruFields.style.display = 'none';
+        document.getElementById('akun-nama').removeAttribute('required');
+      }
+    }
+    
+    // Add akun
+    function addAkun(event) {
+      event.preventDefault();
+      
+      const akunData = {
+        username: document.getElementById('akun-username').value,
+        password: document.getElementById('akun-password').value,
+        role: document.getElementById('akun-role').value
+      };
+      
+      // Tambah data guru jika role adalah guru
+      if (akunData.role === 'guru') {
+        akunData.nama = document.getElementById('akun-nama').value;
+        akunData.nip = document.getElementById('akun-nip').value;
+        akunData.email = document.getElementById('akun-email').value;
+        akunData.no_hp = document.getElementById('akun-nohp').value;
+      }
+      
+      $.ajax({
+        url: `${API_URL}/auth/signup`,
+        type: 'POST',
+        data: JSON.stringify(akunData),
+        contentType: 'application/json',
+        success: function(response) {
+          alert('Akun berhasil ditambahkan');
+          closeModal('add-akun-modal');
+          loadAkun();
+        },
+        error: function(xhr) {
+          alert('Error: ' + xhr.responseJSON.message);
+        }
+      });
+    }
+    
+    // Show QR Code
+    function showQRCode(kelasId, kelasName) {
+      document.getElementById('qrcode-kelas-name').textContent = kelasName;
+      
+      $.get(`${API_URL}/kelas/qrcode/${kelasId}`, function(data) {
+        const qrcodeContainer = document.getElementById('qrcode-container');
+        qrcodeContainer.innerHTML = `<img src="${data.qrCodeDataURL}" alt="QR Code" class="mx-auto">`;
+        showModal('qrcode-modal');
+      });
+    }
+    
+    // Print QR Code
+    function printQRCode() {
+      const qrCodeImg = document.querySelector('#qrcode-container img').src;
+      const kelasName = document.getElementById('qrcode-kelas-name').textContent;
+      
+      const printWindow = window.open('', '_blank');
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>QR Code ${kelasName}</title>
+            <style>
+              body {
+                font-family: Arial, sans-serif;
+                text-align: center;
+                padding: 20px;
+              }
+              .qr-container {
+                margin: 20px auto;
+                width: 300px;
+                height: 300px;
+                border: 1px solid #ddd;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+              }
+              .qr-container img {
+                max-width: 100%;
+                max-height: 100%;
+              }
+            </style>
+          </head>
+          <body>
+            <h1>QR Code untuk ${kelasName}</h1>
+            <div class="qr-container">
+              <img src="${qrCodeImg}" alt="QR Code">
+            </div>
+            <p>Scan QR Code ini untuk melakukan absensi</p>
+            <button onclick="window.print()">Cetak</button>
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
+    }
+    
+    // Reset device
+    function resetDevice(guruId) {
+      if (confirm('Apakah Anda yakin ingin reset device guru ini?')) {
+        $.ajax({
+          url: `${API_URL}/guru/reset-device/${guruId}`,
+          type: 'POST',
+          success: function(response) {
+            alert('Device guru berhasil direset');
+            loadGuru();
+            loadAkun();
+          },
+          error: function(xhr) {
+            alert('Error: ' + xhr.responseJSON.message);
+          }
+        });
+      }
+    }
+    
+    // Delete guru
+    function deleteGuru(guruId) {
+      if (confirm('Apakah Anda yakin ingin menghapus data guru ini?')) {
+        $.ajax({
+          url: `${API_URL}/guru/${guruId}`,
+          type: 'DELETE',
+          success: function(response) {
+            alert('Data guru berhasil dihapus');
+            loadGuru();
+          },
+          error: function(xhr) {
+            alert('Error: ' + xhr.responseJSON.message);
+          }
+        });
+      }
+    }
+    
+    // Delete kelas
+    function deleteKelas(kelasId) {
+      if (confirm('Apakah Anda yakin ingin menghapus data kelas ini?')) {
+        $.ajax({
+          url: `${API_URL}/kelas/${kelasId}`,
+          type: 'DELETE',
+          success: function(response) {
+            alert('Data kelas berhasil dihapus');
+            loadKelas();
+          },
+          error: function(xhr) {
+            alert('Error: ' + xhr.responseJSON.message);
+          }
+        });
+      }
+    }
+    
+    // Delete jadwal
+    function deleteJadwal(jadwalId) {
+      if (confirm('Apakah Anda yakin ingin menghapus data jadwal ini?')) {
+        $.ajax({
+          url: `${API_URL}/jadwal/${jadwalId}`,
+          type: 'DELETE',
+          success: function(response) {
+            alert('Data jadwal berhasil dihapus');
+            loadJadwal();
+          },
+          error: function(xhr) {
+            alert('Error: ' + xhr.responseJSON.message);
+          }
+        });
+      }
+    }
+    
+    // Delete akun
+    function deleteAkun(userId) {
+      if (confirm('Apakah Anda yakin ingin menghapus akun ini?')) {
+        $.ajax({
+          url: `${API_URL}/users/${userId}`,
+          type: 'DELETE',
+          success: function(response) {
+            alert('Akun berhasil dihapus');
+            loadAkun();
+          },
+          error: function(xhr) {
+            alert('Error: ' + xhr.responseJSON.message);
+          }
+        });
+      }
+    }
+    
+    // Change password
+    function changePassword(event) {
+      event.preventDefault();
+      
+      const oldPassword = document.getElementById('old-password').value;
+      const newPassword = document.getElementById('new-password').value;
+      const confirmPassword = document.getElementById('confirm-password').value;
+      
+      if (newPassword !== confirmPassword) {
+        alert('Password baru dan konfirmasi password tidak cocok');
+        return;
+      }
+      
+      $.ajax({
+        url: `${API_URL}/auth/change-password`,
+        type: 'POST',
+        data: JSON.stringify({
+          oldPassword,
+          newPassword
+        }),
+        contentType: 'application/json',
+        success: function(response) {
+          alert('Password berhasil diubah');
+          document.getElementById('change-password-form').reset();
+        },
+        error: function(xhr) {
+          alert('Error: ' + xhr.responseJSON.message);
+        }
+      });
+    }
+    
+    // Logout
+    function logout() {
+      if (confirm('Apakah Anda yakin ingin keluar?')) {
+        localStorage.removeItem('token');
+        window.location.href = 'login.html';
+      }
+    }
+    
+    // Load dashboard on page load
+    $(document).ready(function() {
+      loadDashboard();
+    });
+  </script>
+</body>
+</html>
